@@ -1,0 +1,241 @@
+version: '3'
+services:
+  
+  #PHP Service
+  app1:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: kafkalaravel
+    container_name: kafkalaravel1
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel-network
+    expose:
+      - 9000
+  app2:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: kafkalaravel
+    container_name: kafkalaravel2
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel-network
+    expose:
+      - 9000
+  app3:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: kafkalaravel
+    container_name: kafkalaravel3
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel-network
+    expose:
+      - 9000
+  app4:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: kafkalaravel
+    container_name: kafkalaravel4
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel-network
+    expose:
+      - 9000
+  app5:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: kafkalaravel
+    container_name: kafkalaravel5
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel-network
+    expose:
+      - 9000
+
+
+  kafka:
+    build:
+      context: ./kafka
+      dockerfile: Dockerfile
+    image: kafka
+    container_name: kafka1
+    restart:  unless-stopped
+    working_dir: /app/kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - laravel-network
+  webserver:
+    image: nginx:alpine
+    container_name: laravelwebserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "70:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - laravel-network
+
+  #MySQL Service
+  db:
+    image: mysql:5.7.22
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: kafka
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+    networks:
+      - laravel-network
+  pythonconsumer1:
+    build:
+      context: ./pythonConsumer
+      dockerfile: Dockerfile
+    image:  pythonconsumer
+    container_name: pythonconsumer1
+    restart: unless-stopped
+    working_dir: /app/python
+    environment:
+      - TOPIC=detectionTopic1
+      - PARTITION_GROUP=partitionGroup1
+    depends_on:
+      - kafka
+    networks:
+      - laravel-network
+    volumes:
+      - ./:/app/python
+    # command: ["python consumer.py detectionTopic1 partitionGroup1"]
+
+  pythonconsumer2:
+    build:
+      context: ./pythonConsumer
+      dockerfile: Dockerfile
+    image:  pythonconsumer
+    container_name: pythonconsumer2
+    restart: unless-stopped
+    working_dir:  /app/python
+    environment:
+      - TOPIC=detectionTopic2
+      - PARTITION_GROUP=partitionGroup2
+    depends_on:
+      - kafka
+    networks:
+      - laravel-network
+    volumes:
+      - ./:/app/python
+    # command: ["python consumer.py detectionTopic2 partitionGroup2"]
+
+  pythonconsumer3:
+    build:
+      context: ./pythonConsumer
+      dockerfile: Dockerfile
+    image:  pythonconsumer
+    container_name: pythonconsumer3
+    restart: unless-stopped
+    working_dir: /app/python
+    environment:
+      - TOPIC=detectionTopic3
+      - PARTITION_GROUP=partitionGroup3
+    depends_on:
+      - kafka
+    networks:
+      - laravel-network
+    volumes:
+      - ./:/app/python
+      #look into this
+      
+    # command: ["python consumer.py detectionTopic3 partitionGroup3"]
+
+  pythonconsumer4:
+    build:
+      context: ./pythonConsumer
+      dockerfile: Dockerfile
+    image:  pythonconsumer
+    container_name: pythonconsumer4
+    restart: unless-stopped
+    working_dir: /app/python
+    environment:
+      - TOPIC=detectionTopic4
+      - PARTITION_GROUP=partitionGroup4
+    depends_on:
+      - kafka
+    networks:
+      - laravel-network
+    volumes:
+      - ./:/app/python
+    # command: ["python consumer.py detectionTopic4 partitionGroup4"]
+
+
+#Docker Networks
+networks:
+  laravel-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local

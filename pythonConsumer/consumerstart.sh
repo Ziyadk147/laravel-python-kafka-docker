@@ -1,0 +1,2 @@
+
+# python3 consumer.py detectionTopic1 partitionGroup1 & python3 consumer.py detectionTopic2 partitionGroup2 & python3 consumer.py detectionTopic3 partitionGroup3 & python3 consumer.py detectionTopic4 partitionGroup4

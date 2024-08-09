@@ -1,0 +1,206 @@
+upstream backend {
+  server app1:9000;
+  server app2:9000;  
+  server app3:9000;
+  server app4:9000;
+  server app5:9000;
+}
+server {
+  listen 80;
+  index index.php index.html;
+  error_log /var/log/nginx/error.log;
+  access_log /var/log/nginx/access.log;
+  root /var/www/public;
+  fastcgi_buffers 16 16k;
+  fastcgi_buffer_size 32k;
+  proxy_buffer_size   64k;
+  proxy_buffers   4 128k;
+  proxy_busy_buffers_size   128k;
+  location ~ \.php$ {
+    try_files $uri =404;
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_pass backend;  # Use the upstream block name here
+    fastcgi_index index.php;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+    proxy_read_timeout 3600;
+    fastcgi_read_timeout 500;
+  }
+  location / {
+    try_files $uri $uri/ /index.php?$query_string;
+    gzip_static on;
+    proxy_read_timeout 3600;
+  }
+}
+
+
+
+version: '3'
+services:
+  
+  #PHP Service
+  app1:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: xsensor
+    container_name: xsensor1
+    restart: unless-stopped
+    ports:
+      - "8001:9000"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+  
+    command: php artisan octane:start --server=swoole --port=8000 --workers=16 --max-requests=1000      
+  app2:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: xsensor
+    container_name: xsensor2
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    ports:
+      - "8002:9000"  
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+    command: php artisan octane:start --server=swoole --port=8000 --workers=16 --max-requests=1000      
+  app3:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: xsensor
+    container_name: xsensor3
+    restart: unless-stopped
+    ports:
+      - "8003:9000"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+    command: php artisan octane:start --server=swoole --port=8000 --workers=16 --max-requests=1000      
+  app4:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: xsensor
+    container_name: xsensor4
+    restart: unless-stopped
+    ports:
+      - "8004:9000"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+    command: php artisan octane:start --server=swoole --port=8000 --workers=16 --max-requests=1000
+  app5:
+    build:
+      args:
+        user: ziyad
+        uid: 1000
+      context: .
+      dockerfile: Dockerfile
+    image: xsensor
+    container_name: xsensor5
+    restart: unless-stopped
+    ports:
+      - "8001:9000"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+    command: php artisan octane:start --server=swoole --port=8000 --workers=16 --max-requests=1000      
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "70:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  #MySQL Service
+  # db:
+  #   image: mysql:5.7.22
+  #   container_name: db
+  #   restart: unless-stopped
+  #   tty: true
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     MYSQL_DATABASE: ${DB_DATABASE}
+  #     MYSQL_ROOT_PASSWORD: root
+  #     SERVICE_TAGS: dev
+  #     SERVICE_NAME: mysql
+  #   volumes:
+  #     - dbdata:/var/lib/mysql/
+  #     - ./mysql/my.cnf:/etc/mysql/my.cnf
+  #   networks:
+  #     - app-network
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
